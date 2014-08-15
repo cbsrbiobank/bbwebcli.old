@@ -1,5 +1,5 @@
-# Biobank database tools
+# Bbweb command line interface
 
-A CLI application for running different tools that manipulate the
-[Biobank](https://github.com/cbsrbiobank/biobank) database.
+A CLI application for communicating with an instance of the
+[Bbweb](https://github.com/cbsrbiobank/bbweb) application.
 

@@ -1,0 +1,5 @@
+bbweb {
+  host="localhost"
+  port=9000
+  user_email=""
+}

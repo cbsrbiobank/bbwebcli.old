@@ -44,13 +44,11 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging"        % "3.0.0",
-  "com.github.tototoshi"       %% "scala-csv"            % "1.0.0",
   "ch.qos.logback"             %  "logback-classic"      % "1.0.1",
   "com.github.nscala-time"     %% "nscala-time"          % "1.2.0",
-  "mysql"                      %  "mysql-connector-java" % "5.1.28",
-  "com.typesafe.slick"         %% "slick"                % "2.1.0",
   "com.typesafe"               %  "config"               % "1.2.1",
-  "com.github.tototoshi"       %% "slick-joda-mapper"    % "1.2.0"
+  "net.databinder.dispatch"    %% "dispatch-core"        % "0.11.2",
+  "net.liftweb"                %% "lift-json"            % "2.6-RC1"
 )
 
 // allows calling System.exit() from application

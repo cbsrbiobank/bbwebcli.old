@@ -1,4 +1,4 @@
-package org.biobank
+package org.biobank.cli.command
 
 import scala.collection.mutable.Map
 

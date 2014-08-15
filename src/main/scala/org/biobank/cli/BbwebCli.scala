@@ -1,14 +1,16 @@
-package org.biobank
+package org.biobank.cli
+
+import org.biobank.cli.command.Commands
 
 import com.typesafe.config.ConfigFactory
 
-object DbTools {
+object BbwebCli {
 
   case class Config(host: String, port: Int, userEmail: String)
 
   val ConfigResourceName = "bbwebcli"
 
-  val ConfigPath = "bbweb2"
+  val ConfigPath = "bbweb"
 
   lazy val config: Config = getConfig
 
@@ -42,6 +44,8 @@ object DbTools {
   }
 
   def addCommands = {
+    Commands.addCommand(org.biobank.cli.command.Info)
+    Commands.addCommand(org.biobank.cli.command.Studies)
   }
 
   def getConfig: Config = {

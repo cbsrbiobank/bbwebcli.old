@@ -7,7 +7,7 @@
   </appender>
 
   <logger name="scala.slick.jdbc" level="INFO" />
-  <logger name="PatientSamples" level="INFO" />
+  <logger name="org.biobank.cli.command.Studies" level="INFO" />
 
   <root level="debug">
     <appender-ref ref="STDOUT" />

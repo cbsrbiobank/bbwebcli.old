@@ -26,12 +26,22 @@ object Studies extends Command {
     for (err <- resp.left) yield "Can't connect: " + err.getMessage
   }
 
+  // for http headers see:
+  //
+  // http://stackoverflow.com/questions/12342062/basic-usage-of-dispatch-0-9/12343111#12343111
   def invokeCommand(args: Array[String]): Unit = {
-    val x = for {
-      msg <- Future.successful(login)
-    } yield msg
-    log.info(s"resp: $x")
-    Http.shutdown()
+    val r = for {
+      resp <- login().right
+    } yield resp
+    log.info(s"resp: $r")
 
+    //log.info(s"resp: ${login().right}")
+
+    // login() match {
+    //   case Right(res) => log.info(s"resp: ${res}")
+    //   case _ => log.info("login failed")
+    // }
+
+    Http.shutdown()
   }
 }

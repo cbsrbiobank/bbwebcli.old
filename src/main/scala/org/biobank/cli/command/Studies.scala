@@ -64,11 +64,13 @@ object Studies extends Command {
       status: String)
 
     login().right.map { json =>
-      val token = json.extract[LoginResp]
-      list(token.token).right.map { json =>
-        log.info(s"resp: $json")
-        val study = json.extract[List[Study]]
-        log.info(s"resp: ${study}")
+      val loginResp = json.extract[LoginResp]
+
+      list(loginResp.token)().right.map { json =>
+        val studies = json.extract[List[Study]]
+        studies.foreach { study =>
+          log.info(s"study: ${study.name}: ${study.id}")
+        }
       }
     }
 

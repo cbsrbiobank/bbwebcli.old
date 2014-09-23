@@ -8,7 +8,7 @@ import dispatch._, Defaults._
 import org.json4s._
 import com.ning.http.client.cookie.Cookie
 
-object Studies extends Command {
+object Studies extends Command with HttpCommand {
 
   val Name = "studies"
 
@@ -18,27 +18,6 @@ object Studies extends Command {
   val Usage = s"$Name"
 
   val log = Logger(LoggerFactory.getLogger(this.getClass))
-
-  implicit val formats = DefaultFormats
-
-  val theHost = host(appConfig.host, appConfig.port)
-
-  def login:Future[Either[String, JValue]] = {
-    val req = (theHost / "login").setContentType("application/json", "UTF-8")
-    val post = req << s"""{"email": "${appConfig.userEmail}", "password": "administrator"}"""
-    val resp = Http(post OK as.json4s.Json).either
-    for (err <- resp.left) yield "Can't connect: " + err.getMessage
-  }
-
-  // for http headers see:
-  //
-  // http://stackoverflow.com/questions/12342062/basic-usage-of-dispatch-0-9/12343111#12343111
-  def list(token: String):Future[Either[String, JValue]] = {
-    val cookie = new Cookie("XSRF-TOKEN", token, token, "localhost", "/", -1, 1000, false, true)
-    val req = (theHost / "studies").addCookie(cookie).addHeader("X-XSRF-TOKEN", token)
-    val resp = Http(req OK as.json4s.Json).either
-    for (err <- resp.left) yield "Can't connect: " + err.getMessage
-  }
 
   def invokeCommand(args: Array[String]): Unit = {
     // val r = for {
@@ -53,7 +32,6 @@ object Studies extends Command {
     //   case _ => log.info("login failed")
     // }
 
-    case class LoginResp(token: String)
     case class Study(
       id: String,
       version: Long,
@@ -62,18 +40,22 @@ object Studies extends Command {
       name: String,
       description: Option[String],
       status: String)
+    case class StudiesResp(status: String, data: List[Study])
 
-    login().right.map { json =>
-      val loginResp = json.extract[LoginResp]
-
-      list(loginResp.token)().right.map { json =>
-        val studies = json.extract[List[Study]]
-        studies.foreach { study =>
+    doRequest("studies")().fold(
+      err => {
+        print(err)
+        Http.shutdown()
+      },
+      json => {
+        log.info(s"reply: $json")
+        val resp = json.extract[StudiesResp]
+        resp.data.foreach { study =>
           log.info(s"study: ${study.name}: ${study.id}")
         }
+        Http.shutdown()
       }
-    }
-
-    Http.shutdown()
+    )
+    ()
   }
 }

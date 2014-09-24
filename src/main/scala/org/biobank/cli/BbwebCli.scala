@@ -4,6 +4,10 @@ import org.biobank.cli.command.Commands
 
 import com.typesafe.config.ConfigFactory
 
+/**
+  * NOTE: From SBT use single quotes to use an argument with spaces in it.
+  * Eg. run users add 'test user' test2@test.com testuser
+  */
 object BbwebCli {
 
   case class Config(host: String, port: Int, userEmail: String)
@@ -13,6 +17,8 @@ object BbwebCli {
   val ConfigPath = "bbweb"
 
   lazy val config: Config = getConfig
+
+  val SplitBySpacesRegex = """ (?=([^"']*["'][^"']*["'])*[^"']*$)"""
 
   def main(args: Array[String]) = {
     println(s"${buildinfo.BuildInfo.name} version: ${buildinfo.BuildInfo.version}")
@@ -24,7 +30,8 @@ object BbwebCli {
       System.exit(1)
     }
 
-    val commandName = args(0)
+    val quotedArgs = args.mkString(" ").split(SplitBySpacesRegex)
+    val commandName = quotedArgs(0)
 
     if (commandName == "help") {
       if (args.size == 1) {
@@ -34,18 +41,19 @@ object BbwebCli {
         Commands.showCommandHelp(args(1))
         System.exit(0)
       } else  {
-        println("\tError: invalid command")
+        println("\tError: invalid command:" + args.mkString(" "))
         System.exit(1)
       }
     }
 
     config
-    Commands.invokeCommand(commandName, args.slice(1, args.length))
+    Commands.invokeCommand(commandName, quotedArgs.slice(1, quotedArgs.length))
   }
 
   def addCommands = {
     Commands.addCommand(org.biobank.cli.command.Info)
     Commands.addCommand(org.biobank.cli.command.Studies)
+    Commands.addCommand(org.biobank.cli.command.Users)
   }
 
   def getConfig: Config = {

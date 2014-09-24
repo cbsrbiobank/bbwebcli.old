@@ -30,7 +30,7 @@ object Commands {
     if (commands.contains(commandName)) {
       commands(commandName).invokeCommand(args)
     } else {
-      println("\tError: invalid command: $commandName")
+      println(s"\tError: invalid command: $commandName")
       System.exit(1)
     }
   }
@@ -67,4 +67,5 @@ object Commands {
       System.exit(1)
     }
   }
+
 }

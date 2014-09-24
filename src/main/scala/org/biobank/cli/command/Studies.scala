@@ -23,7 +23,7 @@ object Studies extends Command {
 
   val Log = Logger(LoggerFactory.getLogger(this.getClass))
 
-  implicit val formats = DefaultFormats
+  implicit val formats = Protocol.formats
 
   def invokeCommand(args: Array[String]): Unit = {
     if (args.isEmpty) {
@@ -36,7 +36,7 @@ object Studies extends Command {
   }
 
   def list: Unit = {
-    Session.doRequest("studies") onComplete {
+    Session.doRequest(Session.theHost / "studies") onComplete {
       case Success(e) =>
         e.fold(
           err => Log.error(err),

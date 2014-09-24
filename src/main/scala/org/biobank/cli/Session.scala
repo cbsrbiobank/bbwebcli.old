@@ -3,6 +3,7 @@ package org.biobank.cli
 import org.biobank.cli.BbwebCli.{config => appConfig}
 import dispatch._, Defaults._
 import org.json4s._
+import org.json4s.jackson.JsonMethods._
 import com.ning.http.client.cookie.Cookie
 import org.slf4j.LoggerFactory
 import com.typesafe.scalalogging.Logger
@@ -20,9 +21,13 @@ object Session {
 
   var cookie: Cookie = null
 
+  case class LoginParams(email: String, password: String)
+
   def login: Future[Either[String, JValue]] = {
+    val loginParams = LoginParams(appConfig.userEmail, "administrator")
+
     val req = (theHost / "login").setContentType("application/json", "UTF-8")
-    val post = req << s"""{"email": "${appConfig.userEmail}", "password": "administrator"}"""
+    val post = req << compact(Extraction.decompose(loginParams))
     val resp = Http(post OK as.json4s.Json).either
     for (err <- resp.left) yield "Can't connect: " + err.getMessage
   }
@@ -30,13 +35,13 @@ object Session {
   // for http headers see:
   //
   // http://stackoverflow.com/questions/12342062/basic-usage-of-dispatch-0-9/12343111#12343111
-  private def executeRequest(request: String, token: String): Future[Either[String, JValue]] = {
-    val req = (theHost / request).addCookie(cookie).addHeader("X-XSRF-TOKEN", token)
+  private def executeRequest(request: Req, token: String): Future[Either[String, JValue]] = {
+    val req = request.addCookie(cookie).addHeader("X-XSRF-TOKEN", token)
     val resp = Http(req OK as.json4s.Json).either
-    for (err <- resp.left) yield "Can't connect: " + err.getMessage
+    for (err <- resp.left) yield "request failed: " + err.getMessage
   }
 
-  def doRequest(request: String): Future[Either[String, JValue]] = {
+  def doRequest(request: Req): Future[Either[String, JValue]] = {
     tokenOption match {
       case Some(t) => executeRequest(request, t)
       case None =>
@@ -46,7 +51,7 @@ object Session {
           },
           json => {
             val loginResp = json.extract[LoginResp]
-            Log.debug(s"login resp: $json, $loginResp")
+            Log.trace(s"login resp: ${compact(json)}")
             tokenOption = Some(loginResp.data)
             cookie = new Cookie(
               "XSRF-TOKEN", loginResp.data, loginResp.data, "localhost", "/", -1, 1000, false, true)
@@ -54,5 +59,9 @@ object Session {
           }
         )
     }
+  }
+
+  def doJsonRequest(request: Req): Future[Either[String, JValue]] = {
+    doRequest(request.setContentType("application/json", "UTF-8"))
   }
 }

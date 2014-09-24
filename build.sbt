@@ -48,7 +48,8 @@ libraryDependencies ++= Seq(
   "com.github.nscala-time"     %% "nscala-time"             % "1.2.0",
   "com.typesafe"               %  "config"                  % "1.2.1",
   "net.databinder.dispatch"    %% "dispatch-core"           % "0.11.2",
-  "net.databinder.dispatch"    %% "dispatch-json4s-jackson" % "0.11.0"
+  "net.databinder.dispatch"    %% "dispatch-json4s-jackson" % "0.11.0",
+  "org.json4s"                 %% "json4s-ext"              % "3.2.10"
 )
 
 // allows calling System.exit() from application

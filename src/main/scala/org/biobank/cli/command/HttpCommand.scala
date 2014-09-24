@@ -12,15 +12,28 @@ object HttpCommand {
       future onComplete {
         case Success(e) =>
           e.fold(
-            err => print(s"error: $err"),
+            err => println(s"error: $err"),
             json => fn(json)
           )
           Http.shutdown()
         case Failure(ex) =>
-          print(ex.getMessage)
+          println(ex.getMessage)
           Http.shutdown()
       }
     }
 
+    def onCommandCompletion(failFn: String => Unit)(successFn: JValue => Unit) = {
+      future onComplete {
+        case Success(e) =>
+          e.fold(
+            err => failFn(err),
+            json => successFn(json)
+          )
+          Http.shutdown()
+        case Failure(ex) =>
+          println(ex.getMessage)
+          Http.shutdown()
+      }
+    }
   }
 }

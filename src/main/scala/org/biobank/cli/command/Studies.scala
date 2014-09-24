@@ -27,11 +27,11 @@ object Studies extends Command {
 
   def invokeCommand(args: Array[String]): Unit = {
     if (args.isEmpty) {
-      print(s"invalid command")
+      println(s"studies: invalid command")
     } else if (args(0) == "list") {
       list
     } else {
-      print(s"invalid command: ${args(0)}")
+      println(s"studies: invalid command: ${args(0)}")
     }
   }
 
@@ -45,7 +45,7 @@ object Studies extends Command {
             val resp = json.extract[StudiesResp]
 
             if (resp.data.isEmpty) {
-              print("not studies present.")
+              println("not studies present.")
             } else {
               resp.data.foreach { study =>
                 Log.info(s"study: ${study.name}: ${study.id}")

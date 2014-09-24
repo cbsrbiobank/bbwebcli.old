@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigFactory
 
 /**
   * NOTE: From SBT use single quotes to use an argument with spaces in it.
-  * Eg. run users add 'test user' test2@test.com testuser
+  * Eg. type: run users add "test user" test2@test.com testuser
   */
 object BbwebCli {
 
@@ -18,10 +18,7 @@ object BbwebCli {
 
   lazy val config: Config = getConfig
 
-  val SplitBySpacesRegex = """ (?=([^"']*["'][^"']*["'])*[^"']*$)"""
-
   def main(args: Array[String]) = {
-    println(s"${buildinfo.BuildInfo.name} version: ${buildinfo.BuildInfo.version}")
     addCommands
 
     if (args.size < 1) {
@@ -30,11 +27,12 @@ object BbwebCli {
       System.exit(1)
     }
 
-    val quotedArgs = args.mkString(" ").split(SplitBySpacesRegex)
-    val commandName = quotedArgs(0)
+    //args.foreach(println(_))
+    val commandName = args(0)
 
     if (commandName == "help") {
       if (args.size == 1) {
+        println(s"${buildinfo.BuildInfo.name} version: ${Console.GREEN}${buildinfo.BuildInfo.version}${Console.RESET}\n")
         Commands.showCommandsAndHelp
         System.exit(0)
       } else if (args.size == 2) {
@@ -47,7 +45,7 @@ object BbwebCli {
     }
 
     config
-    Commands.invokeCommand(commandName, quotedArgs.slice(1, quotedArgs.length))
+    Commands.invokeCommand(commandName, args.slice(1, args.length))
   }
 
   def addCommands = {

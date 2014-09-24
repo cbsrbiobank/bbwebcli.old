@@ -7,7 +7,7 @@ object Info extends Command {
   val Name = "info"
 
   val Help =
-    s"""|Shows the application settings. """.stripMargin
+    s"""|Shows the server connection settings. """.stripMargin
 
   val Usage = s"$Name"
 

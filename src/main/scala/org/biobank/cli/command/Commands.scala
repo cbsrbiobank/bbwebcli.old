@@ -53,7 +53,7 @@ object Commands {
     println("Possible commands:\n")
 
     commands.values.foreach{ command =>
-      println(s"${command.Name} - ${command.Help}\n")
+      println(s"\t${Console.GREEN}${command.Name}${Console.RESET} - ${command.Help}\n")
     }
   }
 
@@ -63,7 +63,7 @@ object Commands {
       val command = commands(commandName)
       println(s"usage: ${command.Usage}\n\n${command.Help}")
     } else  {
-      println("invalid command: $command")
+      println("help: invalid command: $command")
       System.exit(1)
     }
   }

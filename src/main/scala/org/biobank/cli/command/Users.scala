@@ -30,13 +30,13 @@ object Users extends Command {
   def invokeCommand(args: Array[String]): Unit = {
     Log.trace(s"""args: ${args.mkString(",")}""")
     if (args.isEmpty) {
-      print(s"invalid command")
+      println(s"invalid arguments")
     } else if (args(0) == "list") {
       list
     } else if (args(0) == "add") {
       add(args.slice(1, args.length))
     } else {
-      print(s"invalid command: ${args(0)}")
+      println(s"users: invalid command: ${args(0)}")
     }
   }
 
@@ -50,7 +50,7 @@ object Users extends Command {
 
   private def printUserTable(users: List[User]): Unit = {
     if (users.isEmpty) {
-      print("not users present.")
+      println("not users present.")
     } else {
       println("Users:")
       println("\tEmail                Name                 Status               Added                Modified")
@@ -68,7 +68,7 @@ object Users extends Command {
 
   private def add(args: Array[String]): Unit = {
     if (args.size != 3) {
-      print(s"invalid command")
+      println(s"users add: invalid command")
     } else {
       val name = args(0)
       val email = args(1)
@@ -78,7 +78,14 @@ object Users extends Command {
       Log.trace(s"json: $json")
 
       val req = (Session.theHost / "users") << json
-      Session.doJsonRequest(req) onCommandSuccess { json =>
+      Session.doJsonRequest(req).onCommandCompletion {
+        err =>
+        if (err.contains("403")) {
+          println(s"user with email already exists: $email")
+        } else {
+          println(s"could not add user: $err")
+        }
+      } { json =>
         Log.debug(s"reply: ${pretty(json)}")
         val status = (json \ "status").extract[String]
         if (status == "success") {

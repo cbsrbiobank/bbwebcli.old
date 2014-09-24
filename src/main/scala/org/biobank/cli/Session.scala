@@ -1,4 +1,4 @@
-package org.biobank.cli.command
+package org.biobank.cli
 
 import org.biobank.cli.BbwebCli.{config => appConfig}
 import dispatch._, Defaults._
@@ -7,17 +7,10 @@ import com.ning.http.client.cookie.Cookie
 import org.slf4j.LoggerFactory
 import com.typesafe.scalalogging.Logger
 
-object Responses {
+object Session {
+  import Protocol._
 
-  case class LoginResp(status: String, data: String)
-
-}
-
-
-trait HttpCommand {
-  import Responses._
-
-  val Log = Logger(LoggerFactory.getLogger(this.getClass))
+  private val Log = Logger(LoggerFactory.getLogger(this.getClass))
 
   val theHost = host(appConfig.host, appConfig.port)
 
@@ -25,7 +18,9 @@ trait HttpCommand {
 
   var tokenOption: Option[String] = None
 
-  def login:Future[Either[String, JValue]] = {
+  var cookie: Cookie = null
+
+  def login: Future[Either[String, JValue]] = {
     val req = (theHost / "login").setContentType("application/json", "UTF-8")
     val post = req << s"""{"email": "${appConfig.userEmail}", "password": "administrator"}"""
     val resp = Http(post OK as.json4s.Json).either
@@ -36,7 +31,6 @@ trait HttpCommand {
   //
   // http://stackoverflow.com/questions/12342062/basic-usage-of-dispatch-0-9/12343111#12343111
   private def executeRequest(request: String, token: String): Future[Either[String, JValue]] = {
-    val cookie = new Cookie("XSRF-TOKEN", token, token, "localhost", "/", -1, 1000, false, true)
     val req = (theHost / request).addCookie(cookie).addHeader("X-XSRF-TOKEN", token)
     val resp = Http(req OK as.json4s.Json).either
     for (err <- resp.left) yield "Can't connect: " + err.getMessage
@@ -48,18 +42,17 @@ trait HttpCommand {
       case None =>
         login().fold(
           err => {
-            Log.error(err)
             Future.successful(Left(err))
           },
           json => {
             val loginResp = json.extract[LoginResp]
-            Log.info(s"login resp: $json, $loginResp")
+            Log.debug(s"login resp: $json, $loginResp")
             tokenOption = Some(loginResp.data)
+            cookie = new Cookie(
+              "XSRF-TOKEN", loginResp.data, loginResp.data, "localhost", "/", -1, 1000, false, true)
             executeRequest(request, loginResp.data)
           }
         )
     }
   }
-
 }
-

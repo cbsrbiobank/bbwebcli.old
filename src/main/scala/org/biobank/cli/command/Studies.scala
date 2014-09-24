@@ -1,14 +1,18 @@
 package org.biobank.cli.command
 
 import org.biobank.cli.BbwebCli.{config => appConfig}
+import org.biobank.cli.Session
+import org.biobank.cli.Protocol
 
 import org.slf4j.LoggerFactory
 import com.typesafe.scalalogging.Logger
 import dispatch._, Defaults._
 import org.json4s._
 import com.ning.http.client.cookie.Cookie
+import scala.util.{ Try, Success, Failure }
 
-object Studies extends Command with HttpCommand {
+object Studies extends Command {
+  import Protocol._
 
   val Name = "studies"
 
@@ -17,45 +21,42 @@ object Studies extends Command with HttpCommand {
 
   val Usage = s"$Name"
 
-  val log = Logger(LoggerFactory.getLogger(this.getClass))
+  val Log = Logger(LoggerFactory.getLogger(this.getClass))
+
+  implicit val formats = DefaultFormats
 
   def invokeCommand(args: Array[String]): Unit = {
-    // val r = for {
-    //   resp <- login().right
-    // } yield resp
-    // log.info(s"resp: $r")
+    if (args.isEmpty) {
+      print(s"invalid command")
+    } else if (args(0) == "list") {
+      list
+    } else {
+      print(s"invalid command: ${args(0)}")
+    }
+  }
 
-    //log.info(s"resp: ${login().right}")
+  def list: Unit = {
+    Session.doRequest("studies") onComplete {
+      case Success(e) =>
+        e.fold(
+          err => Log.error(err),
+          json => {
+            Log.debug(s"reply: $json")
+            val resp = json.extract[StudiesResp]
 
-    // login() match {
-    //   case Right(res) => log.info(s"resp: ${res}")
-    //   case _ => log.info("login failed")
-    // }
-
-    case class Study(
-      id: String,
-      version: Long,
-      addedDate: String,
-      lastUpdateDate: Option[String],
-      name: String,
-      description: Option[String],
-      status: String)
-    case class StudiesResp(status: String, data: List[Study])
-
-    doRequest("studies")().fold(
-      err => {
-        print(err)
+            if (resp.data.isEmpty) {
+              print("not studies present.")
+            } else {
+              resp.data.foreach { study =>
+                Log.info(s"study: ${study.name}: ${study.id}")
+              }
+            }
+          }
+        )
         Http.shutdown()
-      },
-      json => {
-        log.info(s"reply: $json")
-        val resp = json.extract[StudiesResp]
-        resp.data.foreach { study =>
-          log.info(s"study: ${study.name}: ${study.id}")
-        }
-        Http.shutdown()
-      }
-    )
+      case Failure(ex) =>
+        Log.error(ex.getMessage)
+    }
     ()
   }
 }
